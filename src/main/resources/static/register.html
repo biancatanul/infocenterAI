@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Register</title>
+    <style>
+        body {
+            font-family: 'Bahnschrift', 'Segoe UI', Arial, sans-serif;
+            background: linear-gradient(135deg, #3498db 0%, #edd459 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .register-container {
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            width: 350px;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+            font-weight: bold;
+        }
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-sizing: border-box;
+            font-size: 14px;
+        }
+        input:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        button:hover {
+            background: #2077b3;
+        }
+        .message {
+            text-align: center;
+            margin-top: 10px;
+            display: none;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .error {
+            color: #871307;
+            background: #ecafaf;
+        }
+        .success {
+            color: #13b31a;
+            background: #e8f8f0;
+        }
+        .role-selector {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .role-btn {
+            flex: 1;
+            padding: 10px;
+            border: 2px solid #ddd;
+            background: white;
+            border-radius: 5px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.3s;
+        }
+        .role-btn.active{
+            font-weight: bold;
+        }
+        .role-btn.active.student {
+            border-color: #3498db;
+            background: #c4dded;
+            color: #3498db;
+        }
+        .role-btn.active.admin {
+            border-color: #f380b4;
+            background: #fce4f0;
+            color: #f380b4;
+        }
+        .login-link {
+            text-align: center;
+            margin-top: 20px;
+            color: #666;
+        }
+        .login-link a {
+            color: #3498DBFF;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        .login-link a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+<div class="register-container">
+    <h1>Register for InfoCenter AI</h1>
+
+    <div class="role-selector">
+        <div class="role-btn active student" onclick="selectRole('STUDENT')">
+            Student
+        </div>
+        <div class="role-btn admin" onclick="selectRole('ADMIN')">
+            Admin
+        </div>
+    </div>
+
+    <form id="registerForm">
+        <div class="form-group">
+            <label>Email</label>
+            <input type="email" id="email" placeholder="your@email.com" required>
+        </div>
+
+        <div class="form-group">
+            <label>Password</label>
+            <input type="password" id="password" placeholder="At least 6 characters" required>
+        </div>
+
+        <div class="form-group">
+            <label>Confirm Password</label>
+            <input type="password" id="confirmPassword" placeholder="Re-enter password" required>
+        </div>
+
+        <button type="submit">Register</button>
+    </form>
+
+    <div class="message" id="message"></div>
+
+    <div class="login-link">
+        Already have an account? <a href="login.html">Login here</a>
+    </div>
+</div>
+
+<script>
+    let selectedRole = 'STUDENT';
+
+    function selectRole(role) {
+        selectedRole = role;
+        document.querySelectorAll('.role-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        event.target.classList.add('active');
+    }
+
+    document.getElementById('registerForm').onsubmit = async function(e) {
+        e.preventDefault();
+
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+        const confirmPassword = document.getElementById('confirmPassword').value;
+        const messageDiv = document.getElementById('message');
+
+        messageDiv.style.display = 'none';
+
+        if (password !== confirmPassword) {
+            messageDiv.textContent = 'Passwords do not match!';
+            messageDiv.className = 'message error';
+            messageDiv.style.display = 'block';
+            return;
+        }
+
+        if (password.length < 6) {
+            messageDiv.textContent = 'Password must be at least 6 characters!';
+            messageDiv.className = 'message error';
+            messageDiv.style.display = 'block';
+            return;
+        }
+
+        try {
+            const response = await fetch('http://localhost:8080/api/auth/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    email,
+                    password,
+                    role: selectedRole
+                })
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                messageDiv.textContent = 'Registration successful! Redirecting to login...';
+                messageDiv.className = 'message success';
+                messageDiv.style.display = 'block';
+
+                setTimeout(() => {
+                    window.location.href = 'login.html';
+                }, 2000);
+            } else {
+                messageDiv.textContent = data.message || 'Registration failed';
+                messageDiv.className = 'message error';
+                messageDiv.style.display = 'block';
+            }
+        } catch (error) {
+            messageDiv.textContent = 'Error connecting to server';
+            messageDiv.className = 'message error';
+            messageDiv.style.display = 'block';
+        }
+    };
+</script>
+</body>
+</html>

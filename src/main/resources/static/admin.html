@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Admin Panel</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Bahnschrift', 'Segoe UI', Arial, sans-serif;
+            background: #ecf0f1;
+        }
+        .header {
+            background: #051b45;
+            color: white;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .header h1 {
+            font-size: 24px;
+        }
+        .user-info {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+        .back-btn, .logout-btn {
+            padding: 10px 20px;
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 14px;
+            font-family: Bahnschrift;
+        }
+        .logout-btn {
+            background: #c51301;
+        }
+        .back-btn:hover {
+            background: #2980b9;
+        }
+        .logout-btn:hover {
+            background: #871307;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .stat-card {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        .stat-card h3 {
+            color: #7f8c8d;
+            font-size: 14px;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+        }
+        .stat-card .number {
+            font-size: 36px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        .stat-card.students .number {
+            color: #3498db;
+        }
+        .stat-card.admins .number {
+            color: #f380b4;
+        }
+        .stat-card.conversations .number {
+            color: #edd459;
+        }
+
+        .section {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .section h2 {
+            margin-bottom: 20px;
+            color: #021333;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th {
+            background: #0c1f42;
+            color: #edd459;
+            padding: 12px;
+            text-align: left;
+            font-weight: bold;
+        }
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #ecf0f1;
+        }
+        tr:hover {
+            background: #f8f9fa;
+        }
+        .badge {
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .badge.student {
+            background: #e3f2fd;
+            color: #2196f3;
+        }
+        .badge.admin {
+            background: #f3e5f5;
+            color: #f380b4;
+        }
+
+        .empty-state {
+            text-align: center;
+            color: #95a5a6;
+            padding: 40px;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .tab {
+            padding: 10px 20px;
+            background: #ecf0f1;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        .tab.active {
+            background: #edd459;
+            color: white;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+<div class="header">
+    <h1>Admin Panel</h1>
+    <div class="user-info">
+        <span id="userEmail"></span>
+        <a href="index.html" class="back-btn">Back to Chat</a>
+        <button class="logout-btn" onclick="logout()">Logout</button>
+    </div>
+</div>
+
+<div class="container">
+    <div class="stats">
+        <div class="stat-card students">
+            <h3>Total Students</h3>
+            <div class="number" id="studentCount">0</div>
+        </div>
+        <div class="stat-card admins">
+            <h3>Total Admins</h3>
+            <div class="number" id="adminCount">0</div>
+        </div>
+        <div class="stat-card conversations">
+            <h3>Total Conversations</h3>
+            <div class="number" id="conversationCount">0</div>
+        </div>
+    </div>
+
+    <div class="tabs">
+        <button class="tab active" onclick="switchTab('users')">All Users</button>
+        <button class="tab" onclick="switchTab('conversations')">All Conversations</button>
+    </div>
+
+    <div id="usersTab" class="tab-content active">
+        <div class="section">
+            <h2>All Users</h2>
+            <table id="usersTable">
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Email</th>
+                    <th>Role</th>
+                    <th>Conversations</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr><td colspan="4" class="empty-state">Loading...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="conversationsTab" class="tab-content">
+        <div class="section">
+            <h2>All Conversations</h2>
+            <table id="conversationsTable">
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>User Email</th>
+                    <th>Title</th>
+                    <th>Messages</th>
+                    <th>Last Updated</th>
+                    <th>Actions</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr><td colspan="6" class="empty-state">Loading...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script>
+    const userId = localStorage.getItem('userId');
+    const userEmail = localStorage.getItem('userEmail');
+    const userRole = localStorage.getItem('userRole');
+
+    if (!userId) {
+        window.location.href = 'login.html';
+    }
+
+    if (userRole !== 'ADMIN') {
+        alert('Access denied. Admin role required.');
+        window.location.href = 'index.html';
+    }
+
+    document.getElementById('userEmail').textContent = userEmail;
+
+    function logout() {
+        localStorage.clear();
+        window.location.href = 'login.html';
+    }
+
+    function switchTab(tabName) {
+        document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+
+        event.target.classList.add('active');
+        document.getElementById(tabName + 'Tab').classList.add('active');
+    }
+
+    loadStatistics();
+    loadUsers();
+    loadAllConversations();
+
+    async function loadStatistics() {
+        try {
+            const response = await fetch('http://localhost:8080/api/admin/statistics');
+            const stats = await response.json();
+
+            document.getElementById('studentCount').textContent = stats.studentCount || 0;
+            document.getElementById('adminCount').textContent = stats.adminCount || 0;
+            document.getElementById('conversationCount').textContent = stats.conversationCount || 0;
+        } catch (error) {
+            console.error('Error loading statistics:', error);
+        }
+    }
+
+    async function loadUsers() {
+        try {
+            const response = await fetch('http://localhost:8080/api/admin/users');
+            const users = await response.json();
+
+            const tbody = document.querySelector('#usersTable tbody');
+
+            if (users.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" class="empty-state">No users found</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = users.map(user => `
+                    <tr>
+                        <td>${user.id}</td>
+                        <td>${user.email}</td>
+                        <td><span class="badge ${user.role.toLowerCase()}">${user.role}</span></td>
+                        <td>${user.conversationCount || 0}</td>
+                    </tr>
+                `).join('');
+        } catch (error) {
+            console.error('Error loading users:', error);
+        }
+    }
+
+    async function loadAllConversations() {
+        try {
+            const response = await fetch('http://localhost:8080/api/admin/conversations');
+            const conversations = await response.json();
+
+            const tbody = document.querySelector('#conversationsTable tbody');
+
+            if (conversations.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="empty-state">No conversations found</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = conversations.map(conv => {
+                const date = new Date(conv.updatedAt);
+                return `
+                    <tr>
+                        <td>${conv.id}</td>
+                        <td>${conv.userEmail || 'Unknown'}</td>
+                        <td>${conv.title || 'Untitled'}</td>
+                        <td>${conv.messageCount || 0}</td>
+                        <td>${date.toLocaleString()}</td>
+                        <td>
+                            <button onclick="viewConversation(${conv.id}, '${conv.title || 'Untitled'}')"
+                                    style="padding: 5px 10px; background: #3498db; color: white; border: none; border-radius: 3px; cursor: pointer; font-family: Bahnschrift; margin-right: 5px;">
+                                View
+                            </button>
+                            <button onclick="deleteConversation(${conv.id})"
+                                    style="padding: 5px 10px; background: #c51301; color: white; border: none; border-radius: 3px; cursor: pointer; font-family: Bahnschrift;">
+                                Delete
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        } catch (error) {
+            console.error('Error loading conversations:', error);
+        }
+    }
+
+    function deleteConversation(convId) {
+        if (!confirm('Are you sure you want to delete this conversation?')) {
+            return;
+        }
+
+        fetch(`http://localhost:8080/api/chat/conversation/${convId}`, {
+            method: 'DELETE'
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Conversation deleted successfully');
+                    loadAllConversations();
+                    loadStatistics();
+                } else {
+                    alert('Failed to delete conversation');
+                }
+            })
+            .catch(error => {
+                console.error('Error deleting conversation:', error);
+                alert('Error deleting conversation');
+            });
+    }
+
+    function viewConversation(conversationId, conversationTitle) {
+        fetch(`http://localhost:8080/api/chat/messages/${conversationId}`)
+            .then(response => response.json())
+            .then(messages => {
+                if (messages.length === 0) {
+                    alert('No messages in this conversation');
+                    return;
+                }
+
+                let modalHTML = `
+                <div id="modal-backdrop" onclick="closeModal()" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 999;"></div>
+                <div style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 30px; border-radius: 10px; box-shadow: 0 5px 20px rgba(0,0,0,0.3); width: 90%; max-width: 700px; max-height: 80vh; overflow-y: auto; z-index: 1000;">
+                    <h3 style="margin-bottom: 20px; color: #2c3e50; border-bottom: 2px solid #051b45; padding-bottom: 10px;">
+                        ${conversationTitle} <span style="font-size: 14px; color: #7f8c8d;">(ID: ${conversationId})</span>
+                    </h3>
+                    <div style="margin-bottom: 20px;">
+            `;
+
+                messages.forEach(msg => {
+                    const time = new Date(msg.timestamp).toLocaleString();
+                    const isUser = msg.senderType === 'USER';
+                    const bgColor = isUser ? '#051b45' : '#ecf0f1';
+                    const textColor = isUser ? 'white' : '#2c3e50';
+                    const align = isUser ? 'right' : 'left';
+                    const label = isUser ? 'USER' : 'AI';
+
+                    let messageContent;
+                    if (isUser) {
+                        messageContent = escapeHtml(msg.messageText);
+                    } else {
+                        messageContent = marked.parse(msg.messageText);
+                    }
+
+                    modalHTML += `
+                    <div style="margin: 15px 0; text-align: ${align};">
+                        <div class="admin-message ${isUser ? 'user-msg' : 'ai-msg'}" style="display: inline-block; max-width: 80%; padding: 12px 15px; background: ${bgColor}; color: ${textColor}; border-radius: 8px; text-align: left; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                            <div style="font-weight: bold; margin-bottom: 5px; font-size: 12px; opacity: 0.8;">${label}</div>
+                            <div style="word-wrap: break-word; line-height: 1.6;">${messageContent}</div>
+                            <div style="font-size: 11px; margin-top: 8px; opacity: 0.7;">${time}</div>
+                        </div>
+                    </div>
+                `;
+                });
+
+                modalHTML += `
+                    </div>
+                    <div style="text-align: center;">
+                        <button onclick="closeModal()" style="padding: 10px 30px; background: #871307; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 14px; font-weight: bold;">
+                            Close
+                        </button>
+                    </div>
+                    <style>
+                        .ai-msg h2, .ai-msg h3 {
+                            font-size: 16px;
+                            margin: 10px 0 5px 0;
+                            font-weight: bold;
+                        }
+                        .ai-msg ul, .ai-msg ol {
+                            margin: 10px 0;
+                            padding-left: 20px;
+                        }
+                        .ai-msg li {
+                            margin: 5px 0;
+                        }
+                        .ai-msg p {
+                            margin: 8px 0;
+                        }
+                        .ai-msg strong {
+                            font-weight: bold;
+                        }
+                    </style>
+                </div>
+            `;
+
+                const modalContainer = document.createElement('div');
+                modalContainer.id = 'modal-container';
+                modalContainer.innerHTML = modalHTML;
+                document.body.appendChild(modalContainer);
+            })
+            .catch(error => {
+                console.error('Error loading messages:', error);
+                alert('Error loading messages: ' + error);
+            });
+    }
+
+    function closeModal() {
+        const modal = document.getElementById('modal-container');
+        if (modal) {
+            modal.remove();
+        }
+    }
+
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+</script>
+</body>
+</html>
